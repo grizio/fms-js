@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Tests</title>
+</head>
+
+<body>
+  <script src="lib/fsm.js"></script>
+  <script>
+    var fsm = k.fsm.create(function(fsm){
+      fsm.when('first', function(state){
+        state.on('event1', function(){
+          console.log('first event1')
+          return ['first', null]
+        })
+
+        state.on('event2', function(){
+          console.log('first event2')
+          return ['second', {
+            data: 'from event 2'
+          }]
+        })
+
+        state.on('event3', function(a){
+          console.log('first event 3')
+          return ['second']
+        })
+      })
+
+      fsm.when('second', function(state){
+
+      })
+    })
+  </script>
+</body>
+
+</html>

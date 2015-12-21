@@ -1,0 +1,33 @@
+{
+  "name": "fms-js",
+  "version": "1.0.0",
+  "description": "A Finite State Machine for JS",
+  "main": "fsm.js",
+  "dependencies": {
+    "babel-cli": "^6.3.17"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.3.17"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel src -d lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kneelnrise/fms-js.git"
+  },
+  "keywords": [
+    "FSM",
+    "JS"
+  ],
+  "author": "kneelnrise",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kneelnrise/fms-js/issues"
+  },
+  "homepage": "https://github.com/kneelnrise/fms-js#readme",
+  "babel": {
+    "presets": ["es2015"]
+  }
+}
