@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "description": "A Finite State Machine for JS",
   "main": "fsm.js",
-  "dependencies": {
-    "babel-cli": "^6.3.17"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "babel-cli": "^6.3.17"
+    "babel-cli": "^6.3.17",
+    "uglify-js": "^2.6.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "babel src -d lib"
+    "compile": "babel src -d lib",
+    "minify": "uglifyjs lib/fsm.js -o lib/fsm.min.js -c -m",
+    "build": "npm run compile & npm run minify"
   },
   "repository": {
     "type": "git",

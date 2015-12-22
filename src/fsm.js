@@ -21,7 +21,7 @@
         this._currentData = result[1]
 
         if (oldState != this._currentState) {
-          for (var i = 0, c = this._onStateChangedListeners.length; i < c; i++) {
+          for (let i = 0, c = this._onStateChangedListeners.length; i < c; i++) {
             this._onStateChangedListeners[i](oldState, this._currentState)
           }
         }
@@ -29,13 +29,32 @@
         // We clear functions to execute from current FSM to avoid collision if fire is launched by one of them.
         const toExecute = this._toExecute
         this._toExecute = []
-        for (var i = 0, c = toExecute.length; i < c; i++) {
+        for (let i = 0, c = toExecute.length; i < c; i++) {
           toExecute[i]()
         }
+        return this
       }
 
       execute(callback) {
         this._toExecute.push(callback)
+        return this
+      }
+
+      describe(stringify) {
+        const states = []
+        for (let state in this._states) {
+          if (this._states.hasOwnProperty(state)) {
+            states.push(this._states[state].describe())
+          }
+        }
+        return JSON.stringify({
+          "Current state": {
+            "state": this._currentState,
+            "data": this._currentData
+          },
+          "onStateChanged listeners": this._onStateChangedListeners.length,
+          "states": states
+        }, null, ' ')
       }
     }
 
@@ -58,6 +77,20 @@
           throw 'The event "' + eventName + '" does not exist in state "' + this._name + '"'
         }
       }
+
+      describe() {
+        const handlers = []
+        for (let handler in this._handlers) {
+          if (this._handlers.hasOwnProperty(handler)) {
+            handlers.push(handler)
+          }
+        }
+
+        return {
+          "name": this._name,
+          "handlers": handlers
+        }
+      }
     }
 
     class FSMBuilder {
@@ -71,16 +104,19 @@
       startWith(initialState, initialData) {
         this._initialState = initialState
         this._initialData = initialData
+        return this
       }
 
       when(stateName, stateInitializer) {
         const state = new StateBuilder(stateName, this);
         stateInitializer(state);
         this._states[stateName] = state;
+        return this
       }
 
       onStateChanged(listener) {
         this._onStateChangedListeners.push(listener);
+        return this
       }
 
       build() {
@@ -92,7 +128,15 @@
           }
         }
         fsm._states = states
-        return fsm
+
+        // Adds custom functions set in initializer into returned FSM
+        for (let attr in this) {
+          if (this.hasOwnProperty(attr) && attr.charAt(0) != '_') {
+            fsm[attr] = this[attr]
+          }
+        }
+
+        return Object.seal(fsm)
       }
     }
 
@@ -103,11 +147,12 @@
       }
 
       on(eventName, callback) {
-        this._handlers[eventName] = callback;
+        this._handlers[eventName] = callback
+        return this
       }
 
       build(fsm) {
-        return new State(this._name, fsm, this._handlers)
+        return Object.seal(new State(this._name, fsm, this._handlers))
       }
     }
 
