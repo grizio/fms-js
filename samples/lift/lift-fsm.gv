@@ -1,0 +1,8 @@
+digraph {
+  top:sw    -> bottom:nw [ xlabel = "up \n /move up"  ];
+  bottom:ne -> top:se    [ label = "down \n /move down" ];
+  bottom:w  -> bottom:w  [ label = "change(+1) \n /change color(+1)" ];
+  bottom:e  -> bottom:e  [ label = "change(-1) \n /change color(-1)" ];
+  top:n     -> top:n     [ label = "up \n /already up" ];
+  bottom:s  -> bottom:s  [ label = "down \n /already down" ];
+}

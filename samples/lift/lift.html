@@ -1,0 +1,208 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>FSM JS - Sample - Lift</title>
+  <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/foundation/6.0.5/css/foundation.min.css">
+  <style>
+    /* Quick styles, it is a bad practice, but it does the work. :) */
+
+    body {
+      margin-top: 1rem;
+    }
+
+    #lift-box {
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      width: 150px;
+      height: 400px;
+      border: 1px solid black;
+    }
+
+    #lift-box.up {
+      justify-content: flex-start;
+    }
+
+    #lift-box.down {
+      justify-content: flex-end;
+    }
+
+    #lift {
+      width: 150px;
+      height: 150px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="row align-middle">
+    <div class="small-6 columns">
+      <div id="lift-box" class="down">
+        <div id="lift"></div>
+      </div>
+    </div>
+    <div class="small-6 columns">
+      <p class="lead">Open your console (F12, ctrl+maj+J, ...)</p>
+      <button id="up" class="expanded button">Up [event: go up]</button>
+      <button id="down" class="expanded button">Down [event: go down]</button>
+      <button id="previous" class="expanded button">Previous color (bottom only) [event: change(-1)]</button>
+      <button id="next" class="expanded button">Next color (bottom only) [event: change(+1)]</button>
+      <div class="callout">
+        <h5>Your lift leaves you a message</h5>
+        <p id="comment">No message at this time :)</p>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="row">
+    <div class="columns">
+      <div class="media-object">
+        <div class="media-object-section middle">
+          <div class="thumbnail">
+            <img src="lift-fsm.png" alt="Finite State Machine of the lift">
+          </div>
+        </div>
+        <div class="media-object-section middle">
+          <h4>Finite State Machine of the lift</h4>
+          <p>
+            This figure represents the
+            <abbr title="Finite State Machine">FSM</abbr> of the small application above.
+          </p>
+          <p>
+            It was done with <a href="http://www.graphviz.org">Graphviz</a>.
+          </p>
+          <p>
+            You can take the working file <a href="lift-fsm.gv">here</a>.
+          </p>
+
+          <hr>
+          <h4>Computed description</h4>
+          <p>
+            From
+            <code>fsm.describe()</code>, changes when
+            <strong>state name</strong> changes.
+          </p>
+
+          <pre id="describe"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../lib/fsm.min.js"></script>
+  <script>
+    // Global attributes
+    var liftBox = document.querySelector('#lift-box')
+    var lift = document.querySelector('#lift')
+    var comment = document.querySelector('#comment')
+    var colors = ['red', 'green', 'blue']
+
+    /**
+     * Initializes FSM
+     *
+     * The FSM here describes a lift which:
+     * Can go up or change color when on the bottom side
+     * Can go down when on the top side
+     * If the lift is already on top/bottom side when going up/down, a message is displayed.
+     *
+     * We start at *down* state, but the "workspace" initialization needs to be done outside.
+     */
+    var fsm = k.fsm.create(function(fsm) {
+      // We start at state 'bottom'
+      fsm.startWith('down', {
+        color: 'red',
+        colorIndex: 0
+      })
+
+      fsm.when('up', function(state) {
+        // this in handlers refers to fsm.
+        state.on('go up', function(data) {
+          this.alreadyUp(data)
+          return ['up', data]
+        })
+
+        state.on('go down', function(data) {
+          this.moveDown()
+          return ['down', data]
+        })
+      })
+
+      fsm.when('down', function(state) {
+        state.on('go up', function(data) {
+          this.moveUp()
+          return ['up', data]
+        })
+
+        state.on('go down', function(data) {
+          this.alreadyDown(data)
+          return ['down', data]
+        })
+
+        state.on('change', function(data, direction) {
+          this.changeColor(data, direction)
+          return ['down', {
+            color: colors[(data.colorIndex + 3 + direction) % 3],
+            colorIndex: (data.colorIndex + 3 + direction) % 3
+          }]
+        })
+      })
+
+      // Adds action functions in FSM object instead of directly in event handler to simplify undersantding of FSM and reusability.
+      fsm.moveUp = function() {
+        liftBox.classList.add('up')
+        liftBox.classList.remove('down')
+      }
+
+      fsm.moveDown = function() {
+        liftBox.classList.remove('up')
+        liftBox.classList.add('down')
+      }
+
+      fsm.alreadyUp = function(data) {
+        comment.textContent = 'You are already up!'
+        comment.style.color = data.color
+      }
+
+      fsm.alreadyDown = function(data) {
+        comment.textContent = 'You are already down!'
+        comment.style.color = data.color
+      }
+
+      fsm.changeColor = function(data, direction) {
+        lift.style.backgroundColor = colors[(data.colorIndex + 3 + direction) % 3]
+      }
+
+      fsm.onStateChanged(function() {
+        document.querySelector('#describe').textContent = fsm.describe()
+      })
+    })
+
+    // Shows describe result
+    document.querySelector('#describe').textContent = fsm.describe()
+
+    // Initialize "workspace"
+    lift.style.backgroundColor = 'red'
+
+    document.querySelector('#up').onclick = function() {
+      fsm.fire('go up')
+    }
+
+    document.querySelector('#down').onclick = function() {
+      fsm.fire('go down')
+    }
+
+    document.querySelector('#previous').onclick = function() {
+      fsm.fire('change', -1)
+    }
+
+    document.querySelector('#next').onclick = function() {
+      fsm.fire('change', +1)
+    }
+  </script>
+</body>
+
+</html>
