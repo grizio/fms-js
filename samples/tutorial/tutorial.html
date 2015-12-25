@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>FSM JS - Tutorial full code</title>
+  <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/foundation/6.0.5/css/foundation.min.css">
+  <style>
+    body {
+      margin-top: 1rem;
+    }
+
+    .hidden {
+      display: none!important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="row">
+    <div class="small-6 columns">
+      <div class="callout primary" id="state-producer">
+        <h5>Producer</h5>
+        <p>Produced:
+          <span class="number">0</span>
+        </p>
+      </div>
+
+      <div class="callout secondary hidden" id="state-consumer">
+        <h5>Consumer</h5>
+        <p>To consumer:
+          <span class="number">0</span>
+        </p>
+      </div>
+      <div class="expanded button-group">
+        <a class="button" id="produce2">Produce * 2</a>
+        <a class="button" id="produce">Produce</a>
+        <a class="button" id="switch">Switch</a>
+        <a class="button" id="consume">Consume</a>
+        <a class="button" id="consume2">Consume * 2</a>
+      </div>
+    </div>
+    <div class="small-6 columns">
+      <div class="callout">
+        <h5>Console</h5>
+        <button class="button secondary" id="clear">Clear</button>
+        <p id="console"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../lib/fsm.min.js"></script>
+  <script>
+    'use strict'
+
+    // Build fsm
+    var fsm = k.fsm.create(function(fsm) {
+      fsm.startWith('producer', 0)
+
+      fsm.when('producer', function(state) {
+        state.on('produce', function(data, elements) {
+          var elts = elements || 1
+          if (data + elts <= 10) {
+            this.updateData(data + elts)
+            return ['producer', data + elts]
+          } else {
+            this.say('full')
+            return ['producer', data]
+          }
+        })
+        state.on('switch', function(data) {
+          return ['consumer', data]
+        })
+      })
+
+      fsm.when('consumer', function(state) {
+        state.on('consume', function(data, elements) {
+          var elts = elements || 1
+          if (data - elts >= 0) {
+            this.updateData(data - elts)
+            return ['consumer', data - elts]
+          } else {
+            this.say('empty')
+            return ['consumer', data]
+          }
+        })
+        state.on('switch', function(data) {
+          return ['producer', data]
+        })
+      })
+
+      // Externalized actions
+      fsm.updateData = function(number) {
+        // Added for visual show
+        var numberNodes = document.querySelectorAll('.number')
+        for (var i = 0, c = numberNodes.length; i < c; i++) {
+          numberNodes[i].textContent = number
+        }
+      }
+
+      fsm.say = function(text) {
+        console.log(text)
+      }
+
+      // Listen on state changes to show or hide right panel.
+      fsm.onStateChanged(function(oldState, newState){
+        document.querySelector('#state-' + oldState).classList.add('hidden')
+        document.querySelector('#state-' + newState).classList.remove('hidden')
+      })
+    })
+
+    /**
+     * This function handles exceptions when the event cannot be fired.
+     */
+    function safeFire(callback) {
+      try {
+        callback()
+      } catch (e) {
+        console.warn(e)
+      }
+    }
+
+    // Adds event on screen to fire FSM events
+
+    document.querySelector('#produce2').onclick = function(){
+      safeFire(function(){
+        fsm.fire('produce', 2)
+      })
+    }
+
+    document.querySelector('#produce').onclick = function(){
+      safeFire(function(){
+        fsm.fire('produce')
+      })
+    }
+
+    document.querySelector('#switch').onclick = function(){
+      safeFire(function(){
+        fsm.fire('switch')
+      })
+    }
+
+    document.querySelector('#consume').onclick = function(){
+      safeFire(function(){
+        fsm.fire('consume')
+      })
+    }
+
+    document.querySelector('#consume2').onclick = function(){
+      safeFire(function(){
+        fsm.fire('consume', 2)
+      })
+    }
+
+    document.querySelector('#clear').onclick = function(){
+      document.querySelector('#console').innerHTML = ''
+    }
+
+    // Quick bad console redefinition to show on screen
+    console.log = function(text) {
+      document.querySelector('#console').innerHTML += '<div class="callout">' + text + '</div>'
+    }
+
+    console.warn = function(text) {
+      document.querySelector('#console').innerHTML += '<div class="warning callout">' + text + '</div>'
+    }
+  </script>
+</body>
+
+</html>

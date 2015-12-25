@@ -1,0 +1,9 @@
+digraph {
+  rankdir = LR
+  producer:n -> producer:n [label = "produce [element >= 10] \n /element++"]
+  producer:s -> producer:s [label = "produce [element < 10] \n /say 'full'"]
+  producer -> consumer [label = "switch"]
+  consumer -> producer [label = "switch"]
+  consumer:n -> consumer:n [label = "consume [element > 0] \n /element--"]
+  consumer:s -> consumer:s [label = "consume [element <= 0] \n /say 'empty'"]
+}
